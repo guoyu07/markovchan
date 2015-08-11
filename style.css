@@ -1,0 +1,82 @@
+body {
+	color: #000;
+	font: 13px Arial, Helvetica, sans-serif;
+	margin: 0;
+}
+
+nav {
+	display: inline-block;
+}
+
+	nav a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+		nav a:hover {
+			color: #DD0000;
+		}
+
+.yotsuba {
+	background-color: #FFE;
+}
+
+.yotsuba_b {
+	background-color: #EEF2FF;
+}
+
+.post {
+	border-style: solid;
+	border-width: 0 1px 1px 0;
+	display: inline-block;
+	padding: 6px 3px;
+	margin-top: 20px;
+	text-align: left;
+}
+
+.yotsuba .post {
+	background-color: #F0E0D6;
+	border-color: #D9BFB7;
+	color: #800000;
+}
+
+.yotsuba_b .post {
+	background-color: #D6DAF0;
+	border-color: #B7C5D9;
+}
+
+.post_header {
+	padding-right: 3px;
+}
+
+.post_author {
+	color: #117743;
+	font-weight: 700;
+}
+
+.post_content {
+	padding: 13.333px 40px;
+}
+
+	.yotsuba .post_content a {
+		color: #000080;
+	}
+
+		.yotsuba .post_content a:hover {
+			color: #F00;
+		}
+
+	.yotsuba_b .post_content a {
+		color: #DD0000;
+	}
+
+.post .greentext {
+	color: #789922;
+}
+
+#post_wrapper {
+	margin: 10% 5%;
+	position: absolute;
+	text-align: center; /* center post along with inline-block */
+	width: 90%;
+}
