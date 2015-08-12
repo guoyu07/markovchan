@@ -18,10 +18,10 @@ $board = isset($_GET['board']) ? $_GET['board'] : 'g';
 
 $db = initialize_database_for_writing($board);
 
-$raw_threads = get_raw_threads($board);
+$raw_threads = get_raw_threads_from_api($board);
 $thread_numbers = extract_numbers_from_raw_threads($raw_threads);
 
-$thread = get_raw_thread_from_number($board, $thread_numbers[$index]);
+$thread = get_raw_thread_from_api_by_number($board, $thread_numbers[$index]);
 $posts = extract_thread_posts($thread);
 
 $post_numbers_group = implode(',', array_keys($posts));

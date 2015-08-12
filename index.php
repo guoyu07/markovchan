@@ -13,13 +13,8 @@
 
 require 'functions.php';
 
-$board = isset($_GET['board'])
-    ? $_GET['board']
-    : 'g';
-
-$seed = isset($_GET['seed'])
-    ? $_GET['seed']
-    : (int) microtime(true);
+$board = isset($_GET['board']) ? $_GET['board'] : 'g';
+$seed = isset($_GET['seed']) ? $_GET['seed'] : (int) microtime(true);
 
 $db = initialize_database_for_reading($board);
 
@@ -27,20 +22,17 @@ $permalink = "?seed={$seed}";
 
 srand($seed);
 
-$post_words = [];
-
 $cached_words = [];
-$previous_word = '\x02';
-while (1) {
+
+$post_words = [];
+$previous_word = '\x02'; // Signifies start of text
+do {
     $next_word = get_next_word($previous_word, $cached_words, $db, $board);
-
-    if ($next_word == '\x03') {
-        break;
-    }
-
     $post_words[] = $next_word;
     $previous_word = $next_word;
-}
+} while ($next_word != '\x03'); // Signifies end of text
+
+array_pop($post_words); // Remove the excess \x03
 
 $raw_post = implode(' ', $post_words);
 $raw_post_by_line = explode('\n ', $raw_post);
@@ -59,11 +51,8 @@ foreach ($raw_post_by_line as $line) {
 }
 
 $formatted_post = implode('<br>', $cooked_post_by_line);
-
 $date = date('m/d/y(D)H:i:s', $seed);
-
 $post_number = rand(50000000, 59999999);
-
 $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
 ?>

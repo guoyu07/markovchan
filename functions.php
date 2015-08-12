@@ -20,7 +20,7 @@
  */
 function get_json_from_url($url)
 {
-    sleep(1);
+    sleep(1); // As to not upset the API
 
     $r = new http\Client\Request('GET', $url);
     $c = new http\Client();
@@ -36,7 +36,7 @@ function get_json_from_url($url)
  *
  * @return string Thread metadata as JSON
  */
-function get_raw_threads($board)
+function get_raw_threads_from_api($board)
 {
     return get_json_from_url("http://a.4cdn.org/{$board}/threads.json");
 }
@@ -68,7 +68,7 @@ function extract_numbers_from_raw_threads($raw_threads)
  *
  * @return string Full thread JSON
  */
-function get_raw_thread_from_number($board, $number)
+function get_raw_thread_from_api_by_number($board, $number)
 {
     return get_json_from_url("http://a.4cdn.org/{$board}/thread/{$number}.json");
 }
@@ -84,7 +84,7 @@ function extract_thread_posts($thread)
 {
     $thread_posts = [];
     foreach ($thread->posts as $post) {
-        if (isset($post->com)) { // has text
+        if (isset($post->com)) { // Has text
             $contents = $post->com;
             $contents = str_replace('<br>', ' \n ', $contents);
             $contents = strip_tags($contents);
