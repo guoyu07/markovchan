@@ -55,6 +55,12 @@ $date = date('m/d/y(D)H:i:s', $seed);
 $post_number = rand(50000000, 59999999);
 $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
+$metadata = compile_metadata($board, $db);
+$formatted_metadata = '';
+foreach ($metadata as $type => $value) {
+    $formatted_metadata .= "$type $value";
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -81,5 +87,8 @@ $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
                 </div>
             </section>
         </div>
+        <footer>
+            <?php echo $formatted_metadata ?>
+        </footer>
     </body>
 </html>

@@ -12,6 +12,31 @@
  */
 
 /**
+ * Compiles metadata about a board
+ *
+ * @param string $board Target baord
+ * @param PDO    $db    Database connection
+ *
+ * @return array The metadata
+ */
+function compile_metadata($board, $db)
+{
+    $metadata = [];
+
+    $processed_post_count_selection = <<<SQL
+        SELECT COUNT(*)
+        FROM {$board}_processed_post
+SQL;
+
+    $ppcs_statement = $db->prepare($processed_post_count_selection);
+    $ppcs_statement->execute();
+
+    $metadata['processed_post_count'] = $ppcs_statement->fetchColumn();
+
+    return $metadata;
+}
+
+/**
  * Retrieve JSON from on URL
  *
  * @param string $url Target URL
