@@ -47,11 +47,13 @@ function get_json_from_url($url)
 {
     sleep(1); // As to not upset the API
 
-    $r = new http\Client\Request('GET', $url);
-    $c = new http\Client();
-    $c->enqueue($r)->send();
+    include 'vendor/autoload.php';
 
-    return json_decode($c->getResponse()->getBody());
+    $client = new Guzzle\Http\Client;
+    $request = $client->get($url);
+    $response = $request->send();
+
+    return json_decode($response->getBody());
 }
 
 /**
@@ -245,10 +247,10 @@ function initialize_database_for_reading($board)
                 CREATE TABLE $table (
                     word_a varchar(64) not null,
                     word_b varchar(64) not null,
-                    matches int(10) not null,
-                    UNIQUE word_a, word_b
+                    matches int(10) not null
                 )
 SQL;
+            error_log($table_creation);
             $table_creation_statement = $db->prepare($table_creation);
             $table_creation_ok = $table_creation_statement->execute();
 
