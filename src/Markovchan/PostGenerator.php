@@ -9,7 +9,7 @@ abstract class PostGenerator
         $board = isset($_GET['board']) ? $_GET['board'] : 'g';
         $seed = isset($_GET['seed']) ? $_GET['seed'] : (int) microtime(true);
 
-        $db = initialize_database_for_reading($board);
+        $pdo_db = DatabaseConnection::openForReading($board);
 
         $permalink = "?seed={$seed}";
 
@@ -20,7 +20,7 @@ abstract class PostGenerator
         $post_words = [];
         $previous_word = '\x02'; // Signifies start of text
         do {
-            $next_word = get_next_word($previous_word, $cached_words, $db, $board);
+            $next_word = self::getNextWord($previous_word, $cached_words, $pdo_db, $board);
             $post_words[] = $next_word;
             $previous_word = $next_word;
         } while ($next_word != '\x03'); // Signifies end of text
@@ -48,7 +48,7 @@ abstract class PostGenerator
         $post_number = rand(50000000, 59999999);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
-        $metadata = compile_metadata($board, $db);
+        $metadata = self::compileMetadata($board, $pdo_db);
         $formatted_metadata = '';
         foreach ($metadata as $type => $value) {
             $formatted_metadata .= "$type $value";
@@ -59,10 +59,10 @@ abstract class PostGenerator
             <html>
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>/<?php echo $board ?>/</title>
+                    <title>/$board/</title>
                     <link href="style.css" rel="stylesheet">
                 </head>
-                <body class="<?php echo $color_scheme ?>">
+                <body class="$color_scheme">
                     <div id="post_wrapper">
                         <section class="post">
                             <header class="post_header">
@@ -85,5 +85,55 @@ abstract class PostGenerator
                 </body>
             </html>
 HTML;
+    }
+
+    /**
+     * Compile metadata about a board
+     */
+    protected function compileMetadata($board, $pdo_db)
+    {
+        $metadata = [];
+
+        $post_count_sel = "SELECT COUNT(*) FROM {$board}_processed_post";
+        $ppcs_statement = $pdo_db->prepare($post_count_sel);
+        $ppcs_statement->execute();
+
+        $metadata['processed_post_count'] = $ppcs_statement->fetchColumn();
+
+        return $metadata;
+    }
+
+    /**
+     * Get the next word for the chain
+     */
+    protected function getNextWord($previous_word, &$cached_words, $pdo_db, $board)
+    {
+        if (in_array($previous_word, array_keys($cached_words))) {
+            $next_word_candidates = $cached_words[$previous_word];
+        } else {
+            $word_selection = <<<SQL
+                SELECT word_b, matches
+                FROM {$board}_word_pair
+                WHERE word_a = :word
+                ORDER BY matches DESC
+SQL;
+            $selection_statement = $pdo_db->prepare($word_selection);
+            $selection_statement->execute([':word' => $previous_word]);
+
+            $next_word_candidates = [];
+            while ($next_word_row = $selection_statement->fetch()) {
+                for ($i = 0; $i < $next_word_row['matches']; $i += 1) {
+                    $next_word_candidates[] = $next_word_row['word_b'];
+                }
+            }
+
+            if (!isset($cached_words[$previous_word])) {
+                $cached_words[$previous_word] = $next_word_candidates;
+            }
+        }
+
+        $random_word = $next_word_candidates[array_rand($next_word_candidates) / 2 + count($next_word_candidates) / 2];
+
+        return $random_word;
     }
 }
