@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Markovchan;
+
+use PDO;
 
 abstract class DatabaseConnection
 {
     /**
      * Prepare the database for reading
      */
-    public function openForReading($board)
+    public function openForReading(string $board): PDO
     {
         $pdo_db = self::openRaw();
 
@@ -42,7 +46,7 @@ SQL;
     /**
      * Prepare the database for writing
      */
-    public function openForWriting($board)
+    public function openForWriting(string $board): PDO
     {
         $pdo_db = self::openRaw();
 
@@ -97,7 +101,7 @@ SQL;
     /**
      * Tests if a table is good for reading
      */
-    protected function isTableUsable($table, $pdo_db)
+    protected function isTableUsable(string $table, PDO $pdo_db): bool
     {
         $selection_sql = "SELECT COUNT(*) FROM $table LIMIT 1";
 
@@ -111,8 +115,8 @@ SQL;
     /**
      * Open the database connection
      */
-    protected function openRaw()
+    protected function openRaw(): PDO
     {
-        return new \PDO('sqlite:/tmp/markovchan.db', null, null);
+        return new PDO('sqlite:/tmp/markovchan.db', null, null);
     }
 }

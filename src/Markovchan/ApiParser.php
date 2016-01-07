@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Markovchan;
 
 abstract class ApiParser
@@ -13,12 +15,16 @@ abstract class ApiParser
 
         $threads = self::getThreads($board);
 
+        if (empty($threads)) {
+            // API is not responding or something else is screwed
+            return false;
+        }
+
         $combine_posts = function ($all_posts, $thread) {
             $these_posts = self::extractThreadPosts($thread);
             $all_posts = array_merge($all_posts, $these_posts);
             return $all_posts;
         };
-
         $posts = array_reduce($threads, $combine_posts, []);
 
         $post_numbers_group = implode('\',\'', array_keys($posts));
@@ -82,7 +88,7 @@ SQL;
     /**
      * Turn raw thread JSON into posts
      */
-    protected function extractThreadPosts($thread)
+    protected function extractThreadPosts(array $thread): array
     {
         $thread_posts = [];
         foreach ($thread['posts'] as $post) {
@@ -101,7 +107,7 @@ SQL;
     /**
      * Retrieve JSON from an URL
      */
-    protected function getJson($url)
+    protected function getJson(string $url): array
     {
         sleep(1); // As to not upset the API
 
@@ -109,22 +115,28 @@ SQL;
         $request = $client->get($url);
         $response = $request->send();
 
-        return json_decode($response->getBody(), true);
+        $body = $response->getBody();
+        if (gettype($body) === 'string') {
+            return json_decode($body, true);
+        } else {
+            return [];
+        }
     }
 
     /**
      * Fetch thread metadata as JSON from a board
      */
-    protected function getThreads($board)
+    protected function getThreads(string $board): array
     {
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
-        return self::getJson("http://a.4cdn.org/$board/$page_id.json")['threads'];
+        $response_json = self::getJson("http://a.4cdn.org/$board/$page_id.json");
+        return empty($response_json) ? [] : $response_json['threads'];
     }
 
     /**
      * Split text into an array of its words, paired 1-2, 2-3, 3-4...
      */
-    protected function splitTextToPairs($text)
+    protected function splitTextToPairs(string $text): array
     {
         $text = preg_replace('/([.,?!:;]) /', ' \1 ', $text);
         $text = preg_replace('/([.,?!:;])\n/', ' \1 ', $text);

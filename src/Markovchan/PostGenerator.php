@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Markovchan;
+
+use PDO;
 
 abstract class PostGenerator
 {
@@ -81,7 +85,7 @@ HTML;
     /**
      * Compile metadata about a board
      */
-    protected function compileMetadata($board, $pdo_db)
+    protected function compileMetadata(string $board, PDO $pdo_db): array
     {
         $metadata = [];
 
@@ -97,7 +101,7 @@ HTML;
     /**
      * Get the next word for the chain
      */
-    protected function getNextWord($previous_word, &$cached_words, $pdo_db, $board)
+    protected function getNextWord(string $previous_word, array &$cached_words, PDO $pdo_db, string $board): string
     {
         if (in_array($previous_word, array_keys($cached_words))) {
             $next_word_candidates = $cached_words[$previous_word];
