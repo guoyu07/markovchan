@@ -41,6 +41,8 @@ abstract class PostGenerator
         }
 
         $formatted_post = implode('<br>', $cooked_post_by_line);
+        $final_post = preg_replace('/<br>(<br>)+/', '<br><br>', $formatted_post);
+
         $date = date('m/d/y(D)H:i:s');
         $post_number = rand(50000000, 59999999);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
@@ -70,7 +72,7 @@ abstract class PostGenerator
                                 </nav>
                             </header>
                             <div class="post_content">
-                                $formatted_post
+                                $final_post
                             </div>
                         </section>
                     </div>
