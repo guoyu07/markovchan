@@ -1,5 +1,6 @@
 {
     "require": {
-        "guzzle/guzzle": "^3.9"
+        "guzzle/guzzle": "^3.9",
+        "slim/slim": "^3.0"
     }
 }
