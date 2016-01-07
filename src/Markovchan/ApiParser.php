@@ -4,18 +4,28 @@ namespace Markovchan;
 
 abstract class ApiParser
 {
+    const PAGE_MIN = 1;
+    const PAGE_MAX = 10;
+
     public function parse(string $board): bool
     {
         $pdo_db = DatabaseConnection::openForWriting($board);
 
         $threads = self::getThreads($board);
-        $posts = self::extractThreadPosts($threads[1]);
 
-        $post_numbers_group = implode(',', array_keys($posts));
+        $combine_posts = function ($all_posts, $thread) {
+            $these_posts = self::extractThreadPosts($thread);
+            $all_posts = array_merge($all_posts, $these_posts);
+            return $all_posts;
+        };
+
+        $posts = array_reduce($threads, $combine_posts, []);
+
+        $post_numbers_group = implode('\',\'', array_keys($posts));
         $selection_sql = <<<SQL
             SELECT number
             FROM {$board}_processed_post
-            WHERE number IN ($post_numbers_group)
+            WHERE number IN ('$post_numbers_group')
 SQL;
 
         $selection_stmt = $pdo_db->prepare($selection_sql);
@@ -81,7 +91,7 @@ SQL;
                 $contents = str_replace('<br>', ' \n ', $contents);
                 $contents = strip_tags($contents);
 
-                $thread_posts[$post['no']] = $contents;
+                $thread_posts['#' . $post['no']] = $contents;
             }
         }
 
@@ -107,7 +117,8 @@ SQL;
      */
     protected function getThreads($board)
     {
-        return self::getJson("http://a.4cdn.org/{$board}/1.json")['threads'];
+        $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
+        return self::getJson("http://a.4cdn.org/$board/$page_id.json")['threads'];
     }
 
     /**

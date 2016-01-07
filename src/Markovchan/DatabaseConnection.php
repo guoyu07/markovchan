@@ -19,7 +19,8 @@ abstract class DatabaseConnection
                 CREATE TABLE $table (
                     word_a varchar(64) not null,
                     word_b varchar(64) not null,
-                    matches int(10) not null
+                    matches int(10) not null,
+                    UNIQUE (word_a, word_b)
                 )
 SQL;
 
@@ -74,7 +75,7 @@ SQL;
         if (!$post_table_exists) {
             $creation_sql = <<<SQL
                 CREATE TABLE $post_table (
-                    number int(11) not null,
+                    number varchar(16) not null,
                     PRIMARY KEY (number)
                 )
 SQL;
