@@ -126,7 +126,7 @@ SQL;
      */
     protected function getRawThreadByNumber($board, $number)
     {
-        return getJson("http://a.4cdn.org/{$board}/thread/{$number}.json");
+        return self::getJson("http://a.4cdn.org/{$board}/thread/{$number}.json");
     }
 
     /**
@@ -134,7 +134,7 @@ SQL;
      */
     protected function getRawThreads($board)
     {
-        return getJson("http://a.4cdn.org/{$board}/threads.json");
+        return self::getJson("http://a.4cdn.org/{$board}/threads.json");
     }
 
     /**
@@ -142,7 +142,6 @@ SQL;
      */
     protected function splitTextToPairs($text)
     {
-        echo "<pre>{$text}</pre>";
         $text = preg_replace('/([.,?!:;]) /', ' \1 ', $text);
         $text = preg_replace('/([.,?!:;])\n/', ' \1 ', $text);
         $text = preg_replace('/([.,?!:;])$/', ' \1 ', $text);

@@ -11,4 +11,9 @@ $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write($post);
 });
 
+$app->get('/parse', function (Request $request, Response $response) {
+    Markovchan\ApiParser::parse();
+    return $response->withStatus(204);
+});
+
 $app->run();
