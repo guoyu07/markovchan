@@ -4,16 +4,9 @@ namespace Markovchan;
 
 abstract class PostGenerator
 {
-    public function generate()
+    public function generate(string $board): string
     {
-        $board = isset($_GET['board']) ? $_GET['board'] : 'g';
-        $seed = isset($_GET['seed']) ? $_GET['seed'] : (int) microtime(true);
-
         $pdo_db = DatabaseConnection::openForReading($board);
-
-        $permalink = "?seed={$seed}";
-
-        srand($seed);
 
         $cached_words = [];
 
@@ -44,7 +37,7 @@ abstract class PostGenerator
         }
 
         $formatted_post = implode('<br>', $cooked_post_by_line);
-        $date = date('m/d/y(D)H:i:s', $seed);
+        $date = date('m/d/y(D)H:i:s');
         $post_number = rand(50000000, 59999999);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
@@ -60,7 +53,7 @@ abstract class PostGenerator
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
                     <title>/$board/</title>
-                    <link href="style.css" rel="stylesheet">
+                    <link href="/style.css" rel="stylesheet">
                 </head>
                 <body class="$color_scheme">
                     <div id="post_wrapper">
@@ -69,9 +62,7 @@ abstract class PostGenerator
                                 <input type="checkbox">
                                 <span class="post_author">Anonymous</span>
                                 $date
-                                <nav>
-                                    <a href="$permalink">No.</a>
-                                    <a href="/">$post_number ?></a>
+                                No. $post_number
                                 </nav>
                             </header>
                             <div class="post_content">

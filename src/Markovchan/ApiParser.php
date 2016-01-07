@@ -4,18 +4,12 @@ namespace Markovchan;
 
 abstract class ApiParser
 {
-    public function parse()
+    public function parse(string $board): bool
     {
-        $index = isset($_GET['index']) ? $_GET['index'] : 5;
-        $board = isset($_GET['board']) ? $_GET['board'] : 'g';
-
         $pdo_db = DatabaseConnection::openForWriting($board);
 
-        $raw_threads = self::getRawThreads($board);
-        $thread_numbers = self::extractNumbers($raw_threads);
-
-        $thread = self::getRawThreadByNumber($board, $thread_numbers[$index]);
-        $posts = self::extractThreadPosts($thread);
+        $threads = self::getThreads($board);
+        $posts = self::extractThreadPosts($threads[1]);
 
         $post_numbers_group = implode(',', array_keys($posts));
         $selection_sql = <<<SQL
@@ -71,21 +65,8 @@ SQL;
         }
 
         $pdo_db->commit();
-    }
 
-    /**
-     * Extract thread numbers from raw thread JSON
-     */
-    protected function extractNumbers($raw_threads)
-    {
-        $thread_numbers = [];
-        foreach ($raw_threads as $page) {
-            foreach ($page->threads as $thread) {
-                $thread_numbers[] = $thread->no;
-            }
-        }
-
-        return $thread_numbers;
+        return true;
     }
 
     /**
@@ -94,13 +75,13 @@ SQL;
     protected function extractThreadPosts($thread)
     {
         $thread_posts = [];
-        foreach ($thread->posts as $post) {
-            if (isset($post->com)) { // Has text
-                $contents = $post->com;
+        foreach ($thread['posts'] as $post) {
+            if (isset($post['com'])) { // Has text
+                $contents = $post['com'];
                 $contents = str_replace('<br>', ' \n ', $contents);
                 $contents = strip_tags($contents);
 
-                $thread_posts[$post->no] = $contents;
+                $thread_posts[$post['no']] = $contents;
             }
         }
 
@@ -118,23 +99,15 @@ SQL;
         $request = $client->get($url);
         $response = $request->send();
 
-        return json_decode($response->getBody());
-    }
-
-    /**
-     * Turn a thread number into a full thread as JSON
-     */
-    protected function getRawThreadByNumber($board, $number)
-    {
-        return self::getJson("http://a.4cdn.org/{$board}/thread/{$number}.json");
+        return json_decode($response->getBody(), true);
     }
 
     /**
      * Fetch thread metadata as JSON from a board
      */
-    protected function getRawThreads($board)
+    protected function getThreads($board)
     {
-        return self::getJson("http://a.4cdn.org/{$board}/threads.json");
+        return self::getJson("http://a.4cdn.org/{$board}/1.json")['threads'];
     }
 
     /**
