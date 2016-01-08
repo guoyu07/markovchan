@@ -8,6 +8,8 @@ use PDO;
 
 abstract class DatabaseConnection
 {
+    const DB_PATH = '/tmp/markovchan.db';
+
     /**
      * Prepare the database for reading
      */
@@ -117,6 +119,6 @@ SQL;
      */
     protected function openRaw(): PDO
     {
-        return new PDO('sqlite:/tmp/markovchan.db', null, null);
+        return new PDO('sqlite:' . self::DB_PATH, null, null);
     }
 }

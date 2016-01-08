@@ -8,6 +8,12 @@ use PDO;
 
 abstract class PostGenerator
 {
+    const START_OF_POST = '\x02';
+    const END_OF_POST = '\x03';
+
+    const FAUX_POST_NUMBER_MIN = 50000000;
+    const FAUX_POST_NUMBER_MAX = 59999999;
+
     public function generate(string $board): string
     {
         $pdo_db = DatabaseConnection::openForReading($board);
@@ -15,12 +21,12 @@ abstract class PostGenerator
         $cached_words = [];
 
         $post_words = [];
-        $previous_word = '\x02'; // Signifies start of text
+        $previous_word = self::START_OF_POST; // Signifies start of text
         do {
             $next_word = self::getNextWord($previous_word, $cached_words, $pdo_db, $board);
             $post_words[] = $next_word;
             $previous_word = $next_word;
-        } while ($next_word != '\x03'); // Signifies end of text
+        } while ($next_word != self::END_OF_POST); // Signifies end of text
 
         array_pop($post_words); // Remove the excess \x03
 
@@ -44,7 +50,7 @@ abstract class PostGenerator
         $final_post = preg_replace('/<br>(<br>)+/', '<br><br>', $formatted_post);
 
         $date = date('m/d/y(D)H:i:s');
-        $post_number = rand(50000000, 59999999);
+        $post_number = rand(self::FAUX_POST_NUMBER_MIN, self::FAUX_POST_NUMBER_MAX);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
         $metadata = self::compileMetadata($board, $pdo_db);

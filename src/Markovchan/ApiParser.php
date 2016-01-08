@@ -6,6 +6,8 @@ namespace Markovchan;
 
 abstract class ApiParser
 {
+    const API_HOST = 'http://a.4cdn.org';
+
     const PAGE_MIN = 1;
     const PAGE_MAX = 10;
 
@@ -129,7 +131,7 @@ SQL;
     protected function getThreads(string $board): array
     {
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
-        $response_json = self::getJson("http://a.4cdn.org/$board/$page_id.json");
+        $response_json = self::getJson(self::API_HOST . "/$board/$page_id.json");
         return empty($response_json) ? [] : $response_json['threads'];
     }
 
@@ -144,8 +146,8 @@ SQL;
         $text = trim($text);
         $split_text = preg_split('/ +/', $text);
 
-        $first_set = array_merge(['\x02'], $split_text);
-        $second_set = array_merge($split_text, ['\x03']);
+        $first_set = array_merge([PostGenerator::START_OF_POST], $split_text);
+        $second_set = array_merge($split_text, [PostGenerator::END_OF_POST]);
 
         $pairs = [];
         for ($i = 0; $i < count($split_text) + 1; $i += 1) {
