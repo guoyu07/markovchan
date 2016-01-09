@@ -11,7 +11,7 @@ abstract class ApiParser
     const PAGE_MIN = 1;
     const PAGE_MAX = 10;
 
-    public function parse(string $board): bool
+    public static function parse(string $board): bool
     {
         $pdo_db = DatabaseConnection::openForWriting($board);
 
@@ -90,7 +90,7 @@ SQL;
     /**
      * Turn raw thread JSON into posts
      */
-    protected function extractThreadPosts(array $thread): array
+    protected static function extractThreadPosts(array $thread): array
     {
         $thread_posts = [];
         foreach ($thread['posts'] as $post) {
@@ -109,7 +109,7 @@ SQL;
     /**
      * Retrieve JSON from an URL
      */
-    protected function getJson(string $url): array
+    protected static function getJson(string $url): array
     {
         sleep(1); // As to not upset the API
 
@@ -123,7 +123,7 @@ SQL;
     /**
      * Fetch thread metadata as JSON from a board
      */
-    protected function getThreads(string $board): array
+    protected static function getThreads(string $board): array
     {
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
         $response_json = self::getJson(self::API_HOST . "/$board/$page_id.json");
@@ -133,7 +133,7 @@ SQL;
     /**
      * Split text into an array of its words, paired 1-2, 2-3, 3-4...
      */
-    protected function splitTextToPairs(string $text): array
+    protected static function splitTextToPairs(string $text): array
     {
         $text = preg_replace('/([.,?!:;]) /', ' \1 ', $text);
         $text = preg_replace('/([.,?!:;])\n/', ' \1 ', $text);

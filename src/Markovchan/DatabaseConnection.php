@@ -13,7 +13,7 @@ abstract class DatabaseConnection
     /**
      * Prepare the database for reading
      */
-    public function openForReading(string $board): PDO
+    public static function openForReading(string $board): PDO
     {
         $pdo_db = self::openRaw();
 
@@ -48,7 +48,7 @@ SQL;
     /**
      * Prepare the database for writing
      */
-    public function openForWriting(string $board): PDO
+    public static function openForWriting(string $board): PDO
     {
         $pdo_db = self::openRaw();
 
@@ -103,7 +103,7 @@ SQL;
     /**
      * Tests if a table is good for reading
      */
-    protected function isTableUsable(string $table, PDO $pdo_db): bool
+    protected static function isTableUsable(string $table, PDO $pdo_db): bool
     {
         $selection_sql = "SELECT COUNT(*) FROM $table LIMIT 1";
 
@@ -117,7 +117,7 @@ SQL;
     /**
      * Open the database connection
      */
-    protected function openRaw(): PDO
+    protected static function openRaw(): PDO
     {
         return new PDO('sqlite:' . self::DB_PATH, null, null);
     }

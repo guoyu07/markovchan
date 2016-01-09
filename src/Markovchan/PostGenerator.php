@@ -14,18 +14,18 @@ abstract class PostGenerator
     const FAUX_POST_NUMBER_MIN = 50000000;
     const FAUX_POST_NUMBER_MAX = 59999999;
 
-    public function generate(string $board): string
+    public static function generate(string $board): string
     {
         $pdo_db = DatabaseConnection::openForReading($board);
 
         $cached_words = [];
 
         $post_words = [];
-        $previous_word = self::START_OF_POST; // Signifies start of text
+        $prev_word = self::START_OF_POST; // Signifies start of text
         do {
-            $next_word = self::getNextWord($previous_word, $cached_words, $pdo_db, $board);
+            $next_word = self::getNextWord($prev_word, $cached_words, $pdo_db, $board);
             $post_words[] = $next_word;
-            $previous_word = $next_word;
+            $prev_word = $next_word;
         } while ($next_word != self::END_OF_POST); // Signifies end of text
 
         array_pop($post_words); // Remove the excess \x03
@@ -93,7 +93,7 @@ HTML;
     /**
      * Compile metadata about a board
      */
-    protected function compileMetadata(string $board, PDO $pdo_db): array
+    protected static function compileMetadata(string $board, PDO $pdo_db): array
     {
         $metadata = [];
 
@@ -109,10 +109,10 @@ HTML;
     /**
      * Get the next word for the chain
      */
-    protected function getNextWord(string $previous_word, array &$cached_words, PDO $pdo_db, string $board): string
+    protected static function getNextWord(string $prev_word, array &$cached_words, PDO $pdo_db, string $board): string
     {
-        if (in_array($previous_word, array_keys($cached_words))) {
-            $next_word_candidates = $cached_words[$previous_word];
+        if (in_array($prev_word, array_keys($cached_words))) {
+            $next_word_candidates = $cached_words[$prev_word];
         } else {
             $word_selection = <<<SQL
                 SELECT word_b, matches
@@ -121,7 +121,7 @@ HTML;
                 ORDER BY matches DESC
 SQL;
             $selection_statement = $pdo_db->prepare($word_selection);
-            $selection_statement->execute([':word' => $previous_word]);
+            $selection_statement->execute([':word' => $prev_word]);
 
             $next_word_candidates = [];
             while ($next_word_row = $selection_statement->fetch()) {
@@ -130,8 +130,8 @@ SQL;
                 }
             }
 
-            if (!isset($cached_words[$previous_word])) {
-                $cached_words[$previous_word] = $next_word_candidates;
+            if (!isset($cached_words[$prev_word])) {
+                $cached_words[$prev_word] = $next_word_candidates;
             }
         }
 
