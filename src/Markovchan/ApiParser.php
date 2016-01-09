@@ -117,12 +117,7 @@ SQL;
         $request = $client->get($url);
         $response = $request->send();
 
-        $body = $response->getBody();
-        if (gettype($body) === 'string') {
-            return json_decode($body, true);
-        } else {
-            return [];
-        }
+        return $response->json();
     }
 
     /**
