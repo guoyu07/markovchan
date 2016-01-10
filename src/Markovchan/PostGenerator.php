@@ -33,11 +33,12 @@ abstract class PostGenerator
                             <span class="post_author">Anonymous</span>
                             {{ date }}
                             No. {{ post_number }}
-                            </nav>
                         </header>
                         {% if image_url %}
                             <div class="image_wrapper">
-                                <img src="{{ image_url }}">
+                                <a href="{{ image_url }}">
+                                    <img src="{{ thumb_url }}">
+                                </a>
                             </div>
                         {% endif %}
                         <div class="post_content">
@@ -52,7 +53,7 @@ abstract class PostGenerator
         </html>
 HTML;
 
-    public static function generate(string $board, PDO $pdo_db, string $image_url, array $ext_metadata = []): string
+    public static function generate(string $board, PDO $pdo_db, array $image_data, array $ext_metadata = []): string
     {
         $cached_words = [];
 
@@ -100,8 +101,9 @@ HTML;
             'date' => $date,
             'final_post' => $final_post,
             'formatted_metadata' => $formatted_metadata,
-            'image_url' => $image_url,
+            'image_url' => $image_data['image_url'],
             'post_number' => $post_number,
+            'thumb_url' => $image_data['thumb_url'],
         ]);
     }
 

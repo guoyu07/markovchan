@@ -27,7 +27,7 @@ $app->get('/boards/{board}', function (Request $req, Response $res) {
     ];
 
     $pdo_reading_db = Markovchan\DatabaseConnection::openForReading($board);
-    $post = Markovchan\PostGenerator::generate($board, $pdo_reading_db, $parse_data['image_url'], $template_data);
+    $post = Markovchan\PostGenerator::generate($board, $pdo_reading_db, $parse_data['image_data'], $template_data);
 
     $res->getBody()->write($post);
 });

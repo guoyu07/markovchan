@@ -9,6 +9,7 @@ use PDO;
 abstract class ApiParser
 {
     const THREAD_API_HOST = 'http://a.4cdn.org';
+    const THUMB_API_HOST = 'http://i.4cdn.org';
     const IMAGE_API_HOST = 'http://t.4cdn.org';
 
     const PAGE_MIN = 1;
@@ -24,14 +25,14 @@ abstract class ApiParser
             return false;
         }
 
-        $random_image_url = self::extractRandomImageUrl($threads, $board);
+        $image_data = self::extractRandomImageUrls($threads, $board);
         $all_posts = self::extractPosts($threads);
         $fresh_posts = self::dropOldPosts($all_posts, $board, $pdo_db);
         $insertion_ok = self::insertPostsToDatabase($fresh_posts, $board, $pdo_db);
 
         return [
+            'image_data' => $image_data,
             'success' => $insertion_ok,
-            'image_url' => $random_image_url,
         ];
     }
 
@@ -69,7 +70,7 @@ SQL;
         return $posts;
     }
 
-    protected static function extractRandomImageUrl(array $threads, string $board): string
+    protected static function extractRandomImageUrls(array $threads, string $board): array
     {
         shuffle($threads);
 
@@ -82,7 +83,10 @@ SQL;
                     continue;
                 }
 
-                return self::IMAGE_API_HOST . "/$board/{$post['tim']}s.jpg";
+                return [
+                    'image_url' => self::IMAGE_API_HOST . "/$board/{$post['tim']}{$post['ext']}",
+                    'thumb_url' => self::THUMB_API_HOST . "/$board/{$post['tim']}s.jpg",
+                ];
             }
         }
 
