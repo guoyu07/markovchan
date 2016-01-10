@@ -33,16 +33,14 @@ SQL;
             $creation_stmt = $pdo_db->prepare($creation_sql);
             $creation_ok = $creation_stmt->execute();
 
-            if ($creation_ok) {
-                throw new \RuntimeException('The database is initialized but empty');
-            } else {
+            if (!$creation_ok) {
                 throw new \RuntimeException('Could not create table in the database');
             }
-        } elseif (self::isTableUsable($table, $pdo_db)) {
-            return $pdo_db;
-        } else {
+        } elseif (!self::isTableUsable($table, $pdo_db)) {
             throw new \RuntimeException('Table exists but is unreadable');
-        };
+        }
+
+        return $pdo_db;
     }
 
     /**
