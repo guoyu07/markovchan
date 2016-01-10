@@ -6,6 +6,9 @@ namespace Markovchan;
 
 use PDO;
 
+use Twig_Loader_Array;
+use Twig_Environment;
+
 abstract class PostGenerator
 {
     const START_OF_POST = '\x02';
@@ -14,7 +17,37 @@ abstract class PostGenerator
     const FAUX_POST_NUMBER_MIN = 50000000;
     const FAUX_POST_NUMBER_MAX = 59999999;
 
-    public static function generate(string $board): string
+    const POST_TEMPLATE = <<<HTML
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>/{{ board }}/</title>
+                <link href="/style.css" rel="stylesheet">
+            </head>
+            <body class="{{ color_scheme }}">
+                <div id="post_wrapper">
+                    <section class="post">
+                        <header class="post_header">
+                            <input type="checkbox">
+                            <span class="post_author">Anonymous</span>
+                            {{ date }}
+                            No. {{ post_number }}
+                            </nav>
+                        </header>
+                        <div class="post_content">
+                            {{ final_post|raw }}
+                        </div>
+                    </section>
+                </div>
+                <footer>
+                    {{ formatted_metadata }}
+                </footer>
+            </body>
+        </html>
+HTML;
+
+    public static function generate(string $board, array $template_data = []): string
     {
         $pdo_db = DatabaseConnection::openForReading($board);
 
@@ -59,35 +92,16 @@ abstract class PostGenerator
             $formatted_metadata .= "$type $value";
         }
 
-        return <<<HTML
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>/$board/</title>
-                    <link href="/style.css" rel="stylesheet">
-                </head>
-                <body class="$color_scheme">
-                    <div id="post_wrapper">
-                        <section class="post">
-                            <header class="post_header">
-                                <input type="checkbox">
-                                <span class="post_author">Anonymous</span>
-                                $date
-                                No. $post_number
-                                </nav>
-                            </header>
-                            <div class="post_content">
-                                $final_post
-                            </div>
-                        </section>
-                    </div>
-                    <footer>
-                        $formatted_metadata
-                    </footer>
-                </body>
-            </html>
-HTML;
+        $twig_loader = new Twig_Loader_Array(['index.html' => self::POST_TEMPLATE]);
+        $twig = new Twig_Environment($twig_loader);
+        return $twig->render('index.html', [
+            'board' => $board,
+            'color_scheme' => $color_scheme,
+            'date' => $date,
+            'final_post' => $final_post,
+            'formatted_metadata' => $formatted_metadata,
+            'post_number' => $post_number,
+        ]);
     }
 
     /**
