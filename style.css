@@ -19,6 +19,8 @@ nav {
 
 footer {
 	bottom: 3px;
+	font-family: monospace;
+	opacity: 0.5;
 	position: absolute;
 	right: 3px;
 }
