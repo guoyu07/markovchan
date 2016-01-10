@@ -111,8 +111,6 @@ SQL;
      */
     protected static function getJson(string $url): array
     {
-        sleep(1); // As to not upset the API
-
         $client = new \Guzzle\Http\Client;
         $request = $client->get($url);
         $response = $request->send();
