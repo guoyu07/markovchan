@@ -16,8 +16,14 @@ $app->get('/', function (Request $req, Response $res) {
 $app->get('/boards/{board}', function (Request $req, Response $res) {
     $board = $req->getAttribute('board');
 
+    $parse_start_time = microtime(true);
     $parse_ok = Markovchan\ApiParser::parse($board);
-    $template_data = ['parse_ok' => $parse_ok];
+    $parse_exec_time = microtime(true) - $parse_start_time;
+
+    $template_data = [
+        'parse_execution_time' => round($parse_exec_time, 3) . ' s',
+        'parse_ok' => $parse_ok,
+    ];
     $post = Markovchan\PostGenerator::generate($board, $template_data);
 
     $res->getBody()->write($post);
