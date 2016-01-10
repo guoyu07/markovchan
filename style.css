@@ -25,6 +25,11 @@ footer {
 	right: 3px;
 }
 
+.image_wrapper {
+	float: left;
+	padding: 3px 20px 5px 20px;
+}
+
 .yotsuba {
 	background-color: #FFE;
 }

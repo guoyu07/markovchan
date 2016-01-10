@@ -35,6 +35,11 @@ abstract class PostGenerator
                             No. {{ post_number }}
                             </nav>
                         </header>
+                        {% if image_url %}
+                            <div class="image_wrapper">
+                                <img src="{{ image_url }}">
+                            </div>
+                        {% endif %}
                         <div class="post_content">
                             {{ final_post|raw }}
                         </div>
@@ -47,7 +52,7 @@ abstract class PostGenerator
         </html>
 HTML;
 
-    public static function generate(string $board, PDO $pdo_db, array $ext_metadata = []): string
+    public static function generate(string $board, PDO $pdo_db, string $image_url, array $ext_metadata = []): string
     {
         $cached_words = [];
 
@@ -95,6 +100,7 @@ HTML;
             'date' => $date,
             'final_post' => $final_post,
             'formatted_metadata' => $formatted_metadata,
+            'image_url' => $image_url,
             'post_number' => $post_number,
         ]);
     }

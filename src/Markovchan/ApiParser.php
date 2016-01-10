@@ -8,12 +8,15 @@ use PDO;
 
 abstract class ApiParser
 {
-    const API_HOST = 'http://a.4cdn.org';
+    const THREAD_API_HOST = 'http://a.4cdn.org';
+    const IMAGE_API_HOST = 'http://t.4cdn.org';
 
     const PAGE_MIN = 1;
     const PAGE_MAX = 10;
 
-    public static function parse(string $board, PDO $pdo_db): bool
+    const GOOD_FILE_EXTS = ['.jpg', '.png'];
+
+    public static function parse(string $board, PDO $pdo_db): array
     {
         $threads = self::getThreads($board);
         if (empty($threads)) {
@@ -21,11 +24,15 @@ abstract class ApiParser
             return false;
         }
 
+        $random_image_url = self::extractRandomImageUrl($threads, $board);
         $all_posts = self::extractPosts($threads);
         $fresh_posts = self::dropOldPosts($all_posts, $board, $pdo_db);
         $insertion_ok = self::insertPostsToDatabase($fresh_posts, $board, $pdo_db);
 
-        return $insertion_ok;
+        return [
+            'success' => $insertion_ok,
+            'image_url' => $random_image_url,
+        ];
     }
 
     protected static function dropOldPosts(array $all_posts, string $board, PDO $pdo_db): array
@@ -60,6 +67,26 @@ SQL;
         $posts = array_reduce($threads, $pick_threads_posts, []);
 
         return $posts;
+    }
+
+    protected static function extractRandomImageUrl(array $threads, string $board): string
+    {
+        shuffle($threads);
+
+        foreach ($threads as $thread) {
+            $posts = $thread['posts'];
+            shuffle($posts);
+
+            foreach ($posts as $post) {
+                if (!isset($post['filename']) || !in_array($post['ext'], self::GOOD_FILE_EXTS)) {
+                    continue;
+                }
+
+                return self::IMAGE_API_HOST . "/$board/{$post['tim']}s.jpg";
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -99,7 +126,7 @@ SQL;
     protected static function getThreads(string $board): array
     {
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
-        $response_json = self::getJson(self::API_HOST . "/$board/$page_id.json");
+        $response_json = self::getJson(self::THREAD_API_HOST . "/$board/$page_id.json");
         return empty($response_json) ? [] : $response_json['threads'];
     }
 
