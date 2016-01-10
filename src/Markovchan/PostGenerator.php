@@ -47,7 +47,7 @@ abstract class PostGenerator
         </html>
 HTML;
 
-    public static function generate(string $board, array $template_data = []): string
+    public static function generate(string $board, array $ext_metadata = []): string
     {
         $pdo_db = DatabaseConnection::openForReading($board);
 
@@ -86,11 +86,8 @@ HTML;
         $post_number = rand(self::FAUX_POST_NUMBER_MIN, self::FAUX_POST_NUMBER_MAX);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
-        $metadata = self::compileMetadata($board, $pdo_db);
-        $formatted_metadata = '';
-        foreach ($metadata as $type => $value) {
-            $formatted_metadata .= "$type $value";
-        }
+        $metadata = self::gatherAndCompileMetadata($ext_metadata, $board, $pdo_db);
+        $formatted_metadata = self::formatMetaData($metadata);
 
         $twig_loader = new Twig_Loader_Array(['index.html' => self::POST_TEMPLATE]);
         $twig = new Twig_Environment($twig_loader);
@@ -104,13 +101,23 @@ HTML;
         ]);
     }
 
+    protected static function formatMetadata(array $metadata): string
+    {
+        $formatted_metadata = [];
+        foreach ($metadata as $type => $value) {
+            $formatted_metadata[] = "$type: $value";
+        }
+
+        $output = implode(', ', $formatted_metadata);
+
+        return $output;
+    }
+
     /**
      * Compile metadata about a board
      */
-    protected static function compileMetadata(string $board, PDO $pdo_db): array
+    protected static function gatherAndCompileMetadata(array $metadata, string $board, PDO $pdo_db): array
     {
-        $metadata = [];
-
         $post_count_sel = "SELECT COUNT(*) FROM {$board}_processed_post";
         $ppcs_statement = $pdo_db->prepare($post_count_sel);
         $ppcs_statement->execute();

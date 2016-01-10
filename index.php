@@ -16,8 +16,10 @@ $app->get('/', function (Request $req, Response $res) {
 $app->get('/boards/{board}', function (Request $req, Response $res) {
     $board = $req->getAttribute('board');
 
-    Markovchan\ApiParser::parse($board);
-    $post = Markovchan\PostGenerator::generate($board);
+    $parse_ok = Markovchan\ApiParser::parse($board);
+    $template_data = ['parse_ok' => $parse_ok];
+    $post = Markovchan\PostGenerator::generate($board, $template_data);
+
     $res->getBody()->write($post);
 });
 
