@@ -47,10 +47,8 @@ abstract class PostGenerator
         </html>
 HTML;
 
-    public static function generate(string $board, array $ext_metadata = []): string
+    public static function generate(string $board, PDO $pdo_db, array $ext_metadata = []): string
     {
-        $pdo_db = DatabaseConnection::openForReading($board);
-
         $cached_words = [];
 
         $post_words = [];

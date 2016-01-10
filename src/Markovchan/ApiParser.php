@@ -13,10 +13,8 @@ abstract class ApiParser
     const PAGE_MIN = 1;
     const PAGE_MAX = 10;
 
-    public static function parse(string $board): bool
+    public static function parse(string $board, PDO $pdo_db): bool
     {
-        $pdo_db = DatabaseConnection::openForWriting($board);
-
         $threads = self::getThreads($board);
         if (empty($threads)) {
             // API is not responding or something else is screwed

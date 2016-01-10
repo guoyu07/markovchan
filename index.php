@@ -16,15 +16,18 @@ $app->get('/', function (Request $req, Response $res) {
 $app->get('/boards/{board}', function (Request $req, Response $res) {
     $board = $req->getAttribute('board');
 
+    $pdo_writing_db = Markovchan\DatabaseConnection::openForWriting($board);
     $parse_start_time = microtime(true);
-    $parse_ok = Markovchan\ApiParser::parse($board);
+    $parse_ok = Markovchan\ApiParser::parse($board, $pdo_writing_db);
     $parse_exec_time = microtime(true) - $parse_start_time;
 
     $template_data = [
         'parse_execution_time' => round($parse_exec_time, 3) . ' s',
         'parse_ok' => $parse_ok,
     ];
-    $post = Markovchan\PostGenerator::generate($board, $template_data);
+
+    $pdo_reading_db = Markovchan\DatabaseConnection::openForReading($board);
+    $post = Markovchan\PostGenerator::generate($board, $pdo_reading_db, $template_data);
 
     $res->getBody()->write($post);
 });
