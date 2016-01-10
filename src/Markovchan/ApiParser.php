@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Markovchan;
 
+use PDO;
+
 abstract class ApiParser
 {
     const API_HOST = 'http://a.4cdn.org';
@@ -16,20 +18,21 @@ abstract class ApiParser
         $pdo_db = DatabaseConnection::openForWriting($board);
 
         $threads = self::getThreads($board);
-
         if (empty($threads)) {
             // API is not responding or something else is screwed
             return false;
         }
 
-        $combine_posts = function ($all_posts, $thread) {
-            $these_posts = self::extractThreadPosts($thread);
-            $all_posts = array_merge($all_posts, $these_posts);
-            return $all_posts;
-        };
-        $posts = array_reduce($threads, $combine_posts, []);
+        $all_posts = self::extractPosts($threads);
+        $fresh_posts = self::dropOldPosts($all_posts, $board, $pdo_db);
+        $insertion_ok = self::insertPostsToDatabase($fresh_posts, $board, $pdo_db);
 
-        $post_numbers_group = implode('\',\'', array_keys($posts));
+        return $insertion_ok;
+    }
+
+    protected static function dropOldPosts(array $all_posts, string $board, PDO $pdo_db): array
+    {
+        $post_numbers_group = implode('\',\'', array_keys($all_posts));
         $selection_sql = <<<SQL
             SELECT number
             FROM {$board}_processed_post
@@ -39,52 +42,26 @@ SQL;
         $selection_stmt = $pdo_db->prepare($selection_sql);
         $selection_stmt->execute();
 
-        $fresh_posts = $posts;
+        $fresh_posts = $all_posts;
         while ($old_number_row = $selection_stmt->fetch()) {
             if (isset($fresh_posts[$old_number_row['number']])) {
                 unset($fresh_posts[$old_number_row['number']]);
             }
         }
 
-        $pdo_db->beginTransaction();
+        return $fresh_posts;
+    }
 
-        foreach ($fresh_posts as $number => $post) {
-            $insertion_sql = "INSERT INTO {$board}_processed_post (number) VALUES (:number)";
-            $insertion_stmt = $pdo_db->prepare($insertion_sql);
-            $insertion_stmt->execute([':number' => $number]);
+    protected static function extractPosts(array $threads): array
+    {
+        $pick_threads_posts = function ($all_posts, $thread) {
+            $these_posts = self::extractThreadPosts($thread);
+            $all_posts = array_merge($all_posts, $these_posts);
+            return $all_posts;
+        };
+        $posts = array_reduce($threads, $pick_threads_posts, []);
 
-            $pairs = self::splitTextToPairs($post);
-
-            foreach ($pairs as $pair) {
-                $insertion_sql = <<<SQL
-                    INSERT OR IGNORE INTO {$board}_word_pair
-                        (word_a, word_b, matches)
-                    VALUES
-                        (:word_a, :word_b, 0)
-SQL;
-
-                $insertion_stmt = $pdo_db->prepare($insertion_sql);
-                $insertion_stmt->execute(
-                    [':word_a' => $pair[0], ':word_b' => $pair[1]]
-                );
-
-                $update_sql = <<<SQL
-                    UPDATE {$board}_word_pair
-                    SET matches = matches + 1
-                    WHERE word_a = :word_a
-                          AND word_b = :word_b
-SQL;
-
-                $update_stmt = $pdo_db->prepare($update_sql);
-                $update_stmt->execute(
-                    [':word_a' => $pair[0], ':word_b' => $pair[1]]
-                );
-            }
-        }
-
-        $pdo_db->commit();
-
-        return true;
+        return $posts;
     }
 
     /**
@@ -126,6 +103,48 @@ SQL;
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
         $response_json = self::getJson(self::API_HOST . "/$board/$page_id.json");
         return empty($response_json) ? [] : $response_json['threads'];
+    }
+
+    protected static function insertPostsToDatabase(array $fresh_posts, string $board, PDO $pdo_db): bool
+    {
+        $pdo_db->beginTransaction();
+
+        foreach ($fresh_posts as $number => $post) {
+            $insertion_sql = "INSERT INTO {$board}_processed_post (number) VALUES (:number)";
+            $insertion_stmt = $pdo_db->prepare($insertion_sql);
+            $insertion_stmt->execute([':number' => $number]);
+
+            $pairs = self::splitTextToPairs($post);
+
+            foreach ($pairs as $pair) {
+                $insertion_sql = <<<SQL
+                    INSERT OR IGNORE INTO {$board}_word_pair
+                        (word_a, word_b, matches)
+                    VALUES
+                        (:word_a, :word_b, 0)
+SQL;
+
+                $insertion_stmt = $pdo_db->prepare($insertion_sql);
+                $insertion_stmt->execute(
+                    [':word_a' => $pair[0], ':word_b' => $pair[1]]
+                );
+
+                $update_sql = <<<SQL
+                    UPDATE {$board}_word_pair
+                    SET matches = matches + 1
+                    WHERE word_a = :word_a
+                          AND word_b = :word_b
+SQL;
+
+                $update_stmt = $pdo_db->prepare($update_sql);
+                $update_stmt->execute(
+                    [':word_a' => $pair[0], ':word_b' => $pair[1]]
+                );
+            }
+        }
+
+        $commit_ok = $pdo_db->commit();
+        return $commit_ok;
     }
 
     /**
