@@ -29,8 +29,4 @@ $app->get('/boards/{board}', function (Request $req, Response $res) {
     $res->getBody()->write($post);
 });
 
-$app->get('/parse', function (Request $req, Response $res) {
-    return $res->withStatus(204);
-});
-
 $app->run();
