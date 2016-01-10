@@ -26,6 +26,9 @@ abstract class PostGenerator
                 <link href="/style.css" rel="stylesheet">
             </head>
             <body class="{{ color_scheme }}">
+                <nav>
+                    [<a href="a">a</a> / <a href="b">b</a> / <a href="c">c</a> / <a href="d">d</a> / <a href="e">e</a> / <a href="f">f</a> / <a href="g">g</a> / <a href="gif">gif</a> / <a href="h">h</a> / <a href="hr">hr</a> / <a href="k">k</a> / <a href="m">m</a> / <a href="o">o</a> / <a href="p">p</a> / <a href="r">r</a> / <a href="s">s</a> / <a href="t">t</a> / <a href="u">u</a> / <a href="v">v</a> / <a href="vg">vg</a> / <a href="vr">vr</a> / <a href="w">w</a> / <a href="wg">wg</a>] [<a href="i">i</a> / <a href="ic">ic</a>] [<a href="r9k">r9k</a>] [<a href="s4s">s4s</a>] [<a href="cm">cm</a> / <a href="hm">hm</a> / <a href="lgbt">lgbt</a> / <a href="y">y</a>] [<a href="3">3</a> / <a href="aco">aco</a> / <a href="adv">adv</a> / <a href="an">an</a> / <a href="asp">asp</a> / <a href="biz">biz</a> / <a href="cgl">cgl</a> / <a href="ck">ck</a> / <a href="co">co</a> / <a href="diy">diy</a> / <a href="fa">fa</a> / <a href="fit">fit</a> / <a href="gd">gd</a> / <a href="hc">hc</a> / <a href="his">his</a> / <a href="int">int</a> / <a href="jp">jp</a> / <a href="lit">lit</a> / <a href="mlp">mlp</a> / <a href="mu">mu</a> / <a href="n">n</a> / <a href="news">news</a> / <a href="out">out</a> / <a href="po">po</a> / <a href="pol">pol</a> / <a href="sci">sci</a> / <a href="soc">soc</a> / <a href="sp">sp</a> / <a href="tg">tg</a> / <a href="toy">toy</a> / <a href="trv">trv</a> / <a href="tv">tv</a> / <a href="vp">vp</a> / <a href="wsg">wsg</a> / <a href="x">x</a>]
+                </nav>
                 <div id="post_wrapper">
                     <section class="post">
                         <header class="post_header">

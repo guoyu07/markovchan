@@ -5,11 +5,13 @@ body {
 }
 
 nav {
+	color: #89A;
 	display: inline-block;
+	padding: 5px;
 }
 
 	nav a {
-		color: inherit;
+		color: #34345C;
 		text-decoration: none;
 	}
 
