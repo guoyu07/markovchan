@@ -20,3 +20,7 @@ Run `parse.php` a couple of times (preferably >10 000) to gather data, then see 
 0. Install all the requisites
 0. Run `composer install` in the project directory
 0. Create a file `/tmp/markovchan.sqlite` and allow PHP to read and write to it
+
+## Why did you code it
+
+To learn Markov chains, some basic language processing and PHP7.
