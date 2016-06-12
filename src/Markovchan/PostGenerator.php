@@ -38,6 +38,9 @@ abstract class PostGenerator
                             No. {{ post_number }}
                         </header>
                         {% if image_url %}
+                            <div class="image_info">
+                                File: <a href="{{ image_url }}">{{ image_name }}</a> ({{ image_size }}, {{ image_resolution }})
+                            </div>
                             <div class="image_wrapper">
                                 <a href="{{ image_url }}">
                                     <img src="{{ thumb_url }}">
@@ -98,16 +101,17 @@ HTML;
 
         $twig_loader = new Twig_Loader_Array(['index.html' => self::POST_TEMPLATE]);
         $twig = new Twig_Environment($twig_loader);
-        return $twig->render('index.html', [
+
+        $template_data = array_merge($image_data, [
             'board' => $board,
             'color_scheme' => $color_scheme,
             'date' => $date,
             'final_post' => $final_post,
             'formatted_metadata' => $formatted_metadata,
-            'image_url' => $image_data['image_url'],
             'post_number' => $post_number,
-            'thumb_url' => $image_data['thumb_url'],
         ]);
+
+        return $twig->render('index.html', $template_data);
     }
 
     protected static function formatMetadata(array $metadata): string

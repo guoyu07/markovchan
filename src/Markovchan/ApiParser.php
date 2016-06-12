@@ -83,7 +83,14 @@ SQL;
                     continue;
                 }
 
+                $image_size = $post['fsize'] > 1024 * 1024
+                    ? round($post['fsize'] / 1024 / 1024, 2) . ' MB'
+                    : round($post['fsize'] / 1024) . ' KB';
+
                 return [
+                    'image_name' => $post['filename'] . $post['ext'],
+                    'image_size' => $image_size,
+                    'image_resolution' => "{$post['w']}x{$post['h']}",
                     'image_url' => self::IMAGE_API_HOST . "/$board/{$post['tim']}{$post['ext']}",
                     'thumb_url' => self::THUMB_API_HOST . "/$board/{$post['tim']}s.jpg",
                 ];
