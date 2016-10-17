@@ -13,7 +13,7 @@
   ],
   "require": {
     "guzzle/guzzle": "^3.9",
-    "slim/slim": "^3.0",
+    "slim/slim": "~3.0.0",
     "twig/twig": "^1.23"
   },
   "autoload": {
