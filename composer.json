@@ -1,10 +1,24 @@
 {
-    "require": {
-        "guzzle/guzzle": "^3.9",
-        "slim/slim": "^3.0",
-        "twig/twig": "^1.23"
-    },
-    "autoload": {
-        "psr-4": {"Markovchan\\": "src/Markovchan/"}
+  "name": "firoxer/markovchan",
+  "description": "4chan post generator",
+  "version": "0.0.1",
+  "type": "application",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Oliver Vartiainen",
+      "email": "oliver@iki.fi",
+      "homepage": "https://oriba.xyz"
     }
+  ],
+  "require": {
+    "guzzle/guzzle": "^3.9",
+    "slim/slim": "^3.0",
+    "twig/twig": "^1.23"
+  },
+  "autoload": {
+    "psr-4": {
+      "Markovchan\\": "src/Markovchan/"
+    }
+  }
 }
