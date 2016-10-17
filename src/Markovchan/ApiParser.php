@@ -6,7 +6,7 @@ namespace Markovchan;
 
 use PDO;
 
-abstract class ApiParser
+class ApiParser
 {
     const THREAD_API_HOST = 'http://a.4cdn.org';
     const THUMB_API_HOST = 'http://i.4cdn.org';
@@ -17,18 +17,25 @@ abstract class ApiParser
 
     const GOOD_FILE_EXTS = ['.jpg', '.png'];
 
-    public static function parse(string $board, PDO $pdo_db): array
+    private $db;
+
+    public function __construct(PDO $db)
     {
-        $threads = self::getThreads($board);
+        $this->db = $db;
+    }
+
+    public function parse(string $board): array
+    {
+        $threads = $this->getThreads($board);
         if (empty($threads)) {
             // API is not responding or something else is screwed
             return false;
         }
 
-        $image_data = self::extractRandomImageUrls($threads, $board);
-        $all_posts = self::extractPosts($threads);
-        $fresh_posts = self::dropOldPosts($all_posts, $board, $pdo_db);
-        $insertion_ok = self::insertPostsToDatabase($fresh_posts, $board, $pdo_db);
+        $image_data = $this->extractRandomImageUrls($threads, $board);
+        $all_posts = $this->extractPosts($threads);
+        $fresh_posts = $this->dropOldPosts($all_posts, $board);
+        $insertion_ok = $this->insertPostsToDatabase($fresh_posts, $board);
 
         return [
             'image_data' => $image_data,
@@ -36,7 +43,7 @@ abstract class ApiParser
         ];
     }
 
-    protected static function dropOldPosts(array $all_posts, string $board, PDO $pdo_db): array
+    private function dropOldPosts(array $all_posts, string $board): array
     {
         $post_numbers_group = implode('\',\'', array_keys($all_posts));
         $selection_sql = <<<SQL
@@ -45,7 +52,7 @@ abstract class ApiParser
             WHERE number IN ('$post_numbers_group')
 SQL;
 
-        $selection_stmt = $pdo_db->prepare($selection_sql);
+        $selection_stmt = $this->db->prepare($selection_sql);
         $selection_stmt->execute();
 
         $fresh_posts = $all_posts;
@@ -58,10 +65,10 @@ SQL;
         return $fresh_posts;
     }
 
-    protected static function extractPosts(array $threads): array
+    private function extractPosts(array $threads): array
     {
         $pick_threads_posts = function ($all_posts, $thread) {
-            $these_posts = self::extractThreadPosts($thread);
+            $these_posts = $this->extractThreadPosts($thread);
             $all_posts = array_merge($all_posts, $these_posts);
             return $all_posts;
         };
@@ -70,7 +77,7 @@ SQL;
         return $posts;
     }
 
-    protected static function extractRandomImageUrls(array $threads, string $board): array
+    private function extractRandomImageUrls(array $threads, string $board): array
     {
         shuffle($threads);
 
@@ -103,7 +110,7 @@ SQL;
     /**
      * Turn raw thread JSON into posts
      */
-    protected static function extractThreadPosts(array $thread): array
+    private function extractThreadPosts(array $thread): array
     {
         $thread_posts = [];
         foreach ($thread['posts'] as $post) {
@@ -122,7 +129,7 @@ SQL;
     /**
      * Retrieve JSON from an URL
      */
-    protected static function getJson(string $url): array
+    private function getJson(string $url): array
     {
         $client = new \Guzzle\Http\Client;
         $request = $client->get($url);
@@ -134,23 +141,23 @@ SQL;
     /**
      * Fetch thread metadata as JSON from a board
      */
-    protected static function getThreads(string $board): array
+    private function getThreads(string $board): array
     {
         $page_id = rand(self::PAGE_MIN, self::PAGE_MAX);
-        $response_json = self::getJson(self::THREAD_API_HOST . "/$board/$page_id.json");
+        $response_json = $this->getJson(self::THREAD_API_HOST . "/$board/$page_id.json");
         return empty($response_json) ? [] : $response_json['threads'];
     }
 
-    protected static function insertPostsToDatabase(array $fresh_posts, string $board, PDO $pdo_db): bool
+    private function insertPostsToDatabase(array $fresh_posts, string $board): bool
     {
-        $pdo_db->beginTransaction();
+        $this->db->beginTransaction();
 
         foreach ($fresh_posts as $number => $post) {
             $insertion_sql = "INSERT INTO {$board}_processed_post (number) VALUES (:number)";
-            $insertion_stmt = $pdo_db->prepare($insertion_sql);
+            $insertion_stmt = $this->db->prepare($insertion_sql);
             $insertion_stmt->execute([':number' => $number]);
 
-            $pairs = self::splitTextToPairs($post);
+            $pairs = $this->splitTextToPairs($post);
 
             foreach ($pairs as $pair) {
                 $insertion_sql = <<<SQL
@@ -160,7 +167,7 @@ SQL;
                         (:word_a, :word_b, 0)
 SQL;
 
-                $insertion_stmt = $pdo_db->prepare($insertion_sql);
+                $insertion_stmt = $this->db->prepare($insertion_sql);
                 $insertion_stmt->execute(
                     [':word_a' => $pair[0], ':word_b' => $pair[1]]
                 );
@@ -172,21 +179,21 @@ SQL;
                           AND word_b = :word_b
 SQL;
 
-                $update_stmt = $pdo_db->prepare($update_sql);
+                $update_stmt = $this->db->prepare($update_sql);
                 $update_stmt->execute(
                     [':word_a' => $pair[0], ':word_b' => $pair[1]]
                 );
             }
         }
 
-        $commit_ok = $pdo_db->commit();
+        $commit_ok = $this->db->commit();
         return $commit_ok;
     }
 
     /**
      * Split text into an array of its words, paired 1-2, 2-3, 3-4...
      */
-    protected static function splitTextToPairs(string $text): array
+    private function splitTextToPairs(string $text): array
     {
         $text = preg_replace('/([.,?!:;]) /', ' \1 ', $text);
         $text = preg_replace('/([.,?!:;])\n/', ' \1 ', $text);

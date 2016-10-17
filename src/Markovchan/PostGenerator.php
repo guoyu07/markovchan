@@ -9,7 +9,7 @@ use PDO;
 use Twig_Loader_Array;
 use Twig_Environment;
 
-abstract class PostGenerator
+class PostGenerator
 {
     const START_OF_POST = '\x02';
     const END_OF_POST = '\x03';
@@ -59,14 +59,19 @@ abstract class PostGenerator
         </html>
 HTML;
 
-    public static function generate(string $board, PDO $pdo_db, array $image_data, array $ext_metadata = []): string
+    public function __construct(PDO $db)
+    {
+        $this->db = $db;
+    }
+
+    public function generate(string $board, array $image_data, array $ext_metadata = []): string
     {
         $cached_words = [];
 
         $post_words = [];
         $prev_word = self::START_OF_POST; // Signifies start of text
         do {
-            $next_word = self::getNextWord($prev_word, $cached_words, $pdo_db, $board);
+            $next_word = $this->getNextWord($prev_word, $cached_words, $board);
             $post_words[] = $next_word;
             $prev_word = $next_word;
         } while ($next_word != self::END_OF_POST); // Signifies end of text
@@ -96,8 +101,8 @@ HTML;
         $post_number = rand(self::FAUX_POST_NUMBER_MIN, self::FAUX_POST_NUMBER_MAX);
         $color_scheme = in_array($board, ['g']) ? 'yotsuba_b' : 'yotsuba';
 
-        $metadata = self::gatherAndCompileMetadata($ext_metadata, $board, $pdo_db);
-        $formatted_metadata = self::formatMetaData($metadata);
+        $metadata = $this->gatherAndCompileMetadata($ext_metadata, $board);
+        $formatted_metadata = $this->formatMetaData($metadata);
 
         $twig_loader = new Twig_Loader_Array(['index.html' => self::POST_TEMPLATE]);
         $twig = new Twig_Environment($twig_loader);
@@ -114,7 +119,7 @@ HTML;
         return $twig->render('index.html', $template_data);
     }
 
-    protected static function formatMetadata(array $metadata): string
+    private function formatMetadata(array $metadata): string
     {
         $formatted_metadata = [];
         foreach ($metadata as $type => $value) {
@@ -129,10 +134,10 @@ HTML;
     /**
      * Compile metadata about a board
      */
-    protected static function gatherAndCompileMetadata(array $metadata, string $board, PDO $pdo_db): array
+    private function gatherAndCompileMetadata(array $metadata, string $board): array
     {
         $post_count_sel = "SELECT COUNT(*) FROM {$board}_processed_post";
-        $ppcs_statement = $pdo_db->prepare($post_count_sel);
+        $ppcs_statement = $this->db->prepare($post_count_sel);
         $ppcs_statement->execute();
 
         $metadata['processed_post_count'] = $ppcs_statement->fetchColumn();
@@ -143,7 +148,7 @@ HTML;
     /**
      * Get the next word for the chain
      */
-    protected static function getNextWord(string $prev_word, array &$cached_words, PDO $pdo_db, string $board): string
+    private function getNextWord(string $prev_word, array &$cached_words, string $board): string
     {
         if (in_array($prev_word, array_keys($cached_words))) {
             $next_word_candidates = $cached_words[$prev_word];
@@ -154,7 +159,7 @@ HTML;
                 WHERE word_a = :word
                 ORDER BY matches DESC
 SQL;
-            $selection_statement = $pdo_db->prepare($word_selection);
+            $selection_statement = $this->db->prepare($word_selection);
             $selection_statement->execute([':word' => $prev_word]);
 
             $next_word_candidates = [];

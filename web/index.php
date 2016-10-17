@@ -18,7 +18,8 @@ $app->get('/boards/{board}', function (Request $req, Response $res) {
 
     $pdo_writing_db = Markovchan\DatabaseConnection::openForWriting($board);
     $parse_start_time = microtime(true);
-    $parse_data = Markovchan\ApiParser::parse($board, $pdo_writing_db);
+    $parser = new Markovchan\ApiParser($pdo_writing_db);
+    $parse_data = $parser->parse($board);
     $parse_exec_time = microtime(true) - $parse_start_time;
 
     $template_data = [
@@ -27,7 +28,8 @@ $app->get('/boards/{board}', function (Request $req, Response $res) {
     ];
 
     $pdo_reading_db = Markovchan\DatabaseConnection::openForReading($board);
-    $post = Markovchan\PostGenerator::generate($board, $pdo_reading_db, $parse_data['image_data'], $template_data);
+    $post_generator = new Markovchan\PostGenerator($pdo_reading_db);
+    $post = $post_generator->generate($board, $parse_data['image_data'], $template_data);
 
     $res->getBody()->write($post);
 });
